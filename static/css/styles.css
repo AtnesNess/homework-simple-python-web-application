@@ -1,0 +1,18 @@
+body{
+    margin: 10px 30px 20px 30px;
+}
+#header{
+    border: 1px solid black;
+    border-radius: 5px;
+    margin-top: 10px;
+    margin-bottom: 10px;
+}
+
+#code-area{
+    border: 1px solid black;
+    border-radius: 5px;
+
+
+    width: 80%;
+}
+

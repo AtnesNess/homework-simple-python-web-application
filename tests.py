@@ -1,43 +1,55 @@
-from __future__ import unicode_literals, print_function, generators, division
-from collections import Iterable
-import wsgiref.util
-import wsgiref.validate
-import sys
 
-__author__ = 'pahaz'
-PY3 = sys.version_info[0] == 3
-
-# MOCK environ
-mock_environ = {}
-wsgiref.util.setup_testing_defaults(mock_environ)
+import main
+import os
+import unittest
+import tempfile
 
 
-# MOCK start_response
-is_start_response_call = False
-start_response_status = None
-start_response_headers = None
+class PasterTestCase(unittest.TestCase):
 
+    def setUp(self):
 
-def mock_start_response(status, headers):
-    global is_start_response_call
-    global start_response_headers, start_response_status
-    is_start_response_call = True
-    start_response_status = status
-    start_response_headers = headers
+        self.db_fd, main.app.config['DATABASE'] = tempfile.mkstemp()
+        main.app.config['TESTING'] = True
+        self.app = main.app.test_client()
+        main.init_db()
 
-# IMPORT APP
-from main import application
+    def tearDown(self):
+        os.close(self.db_fd)
+        os.unlink(main.app.config['DATABASE'])
 
-# INITIALIZE
-if PY3:
-    application = wsgiref.validate.validator(application)
-result = application(mock_environ, mock_start_response)
+    def test_paste_raw(self):
+        rv = self.app.post('/', data=dict(lexer='python', paste='#test\r\npython = code\r\nprint("hello world")'),
+                           follow_redirects=True)
+        data = rv.data.decode("utf-8")
+        assert """#test
+python = code
+print(&#34;hello world&#34;)""" not in data
 
-# ASSERTS
-assert isinstance(result, Iterable), "application() return isn't iterable obj"
-assert is_start_response_call, "start_response isn't called"
-assert start_response_status == "200 OK", "start_response status != '200 OK'"
+    def test_delete_same_user(self):
+        rv = self.app.post('/', data=dict(lexer='python', paste='#test\r\npython = code\r\nprint("hello world")'))
+        loc = rv.location
+        rv = self.app.get(loc)
+        rv = self.app.get(loc)
+        data = rv.data.decode("utf-8")
+        assert """#test
+python = code
+print(&#34;hello world&#34;)""" not in data
 
-# tearDown
-if hasattr(result, 'close'):
-    result.close()
+    def test_delete_another_user(self):
+        rv = self.app.post('/', data=dict(lexer='python', paste='#test\r\npython = code\r\nprint("hello world")',
+                                        seen_delete=True
+                                         ))
+        loc = rv.location
+        rv = self.app.get(loc)
+        data = rv.data.decode("utf-8")
+        assert """#test
+python = code
+print(&#34;hello world&#34;)""" not in data
+        self.app.get(loc,  environ_base={'REMOTE_ADDR': "123.123.123.123"})
+        rv = self.app.get(loc)
+        data = rv.data.decode("utf-8")
+        assert 'Paste Not Found =(\n' not in data
+
+if __name__ == '__main__':
+    unittest.main()

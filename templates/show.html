@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block body %}
+{{ lexer }}
+    <div class="center-block">
+        <div class="row" >
+             <div class="col-md-12" >
+                {% autoescape false %}
+                   {{ code }}
+                {% endautoescape %}
+
+            </div>
+
+        </div>
+    </div>
+RAW_PASTE
+ <div class="center-block">
+        <div class="row" >
+             <div class="col-md-12">
+                 <textarea id="code-area" rows="10">{{ raw }}
+                 </textarea>
+
+            </div>
+
+        </div>
+    </div>
+
+
+{% endblock %}
