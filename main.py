@@ -48,6 +48,7 @@ def create():
         paste_sec = None
         while True:
             paste_sec = ''.join(random.choice(string.ascii_lowercase + string.digits) for _ in range(7))
+
             cur = g.db.execute("SELECT * FROM paste_table where id_sec='{}'".format(paste_sec))
             if len(cur.fetchall()) == 0:
                 break
@@ -73,6 +74,8 @@ def create():
 
 @app.route('/<paste_sec>')
 def show_paste(paste_sec):
+    if " " in paste_sec or '"' in paste_sec:
+        return "Paste Not Found =("
     cur = g.db.execute('select code, lexer, seen_delete, user_ip from paste_table where id_sec="{}"'.format(paste_sec))
     entries = [dict(code=row[0], lexer=row[1], seen_delete=row[2], user_ip=row[3]) for row in cur.fetchall()]
     if len(entries) == 0:
