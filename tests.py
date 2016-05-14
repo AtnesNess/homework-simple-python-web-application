@@ -18,7 +18,7 @@ class PasterTestCase(unittest.TestCase):
         os.close(self.db_fd)
         os.unlink(main.app.config['DATABASE'])
 
-    def test_paste_raw(self):
+    def test_paste(self):
         rv = self.app.post('/', data=dict(lexer='python', paste='#test\r\npython = code\r\nprint("hello world")'),
                            follow_redirects=True)
         data = rv.data.decode("utf-8")
