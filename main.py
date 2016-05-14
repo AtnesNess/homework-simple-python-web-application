@@ -86,13 +86,12 @@ def show_paste(paste_sec):
     code = entries[0]['code'].replace("&#39;", "'")
     raw = code
     code = highlight(code, get_lexer_by_name(entries[0]['lexer']), HtmlFormatter())
-    entries[0]['code'] = code
     if entries[0]['seen_delete'] == 1 and \
-                    entries[0]['user_ip'] != str(request.remote_addr):
+       entries[0]['user_ip'] != str(request.remote_addr):
 
         g.db.execute('delete from paste_table where id_sec=?', (paste_sec, ))
         g.db.commit()
-    return render_template("show.html", **entries[0], raw=raw)
+    return render_template("show.html", code=code, raw=raw)
 
 
 if __name__ == '__main__':
