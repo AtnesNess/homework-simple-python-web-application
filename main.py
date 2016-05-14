@@ -90,7 +90,7 @@ def show_paste(paste_sec):
     if entries[0]['seen_delete'] == 1 and \
                     entries[0]['user_ip'] != str(request.remote_addr):
 
-        g.db.execute('delete from paste_table where id_sec="{}"'.format(paste_sec))
+        g.db.execute('delete from paste_table where id_sec=?', (paste_sec, ))
         g.db.commit()
     return render_template("show.html", **entries[0], raw=raw)
 
